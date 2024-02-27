@@ -1,19 +1,21 @@
-use near_sdk::{near_bindgen, borsh};
+use near_sdk::{near_bindgen, borsh, AccountId};
 
 #[near_bindgen]
 #[derive(Default, borsh::BorshDeserialize, borsh::BorshSerialize)]
 #[borsh(crate = "near_sdk::borsh")]
-pub struct MyApp;
+pub struct MyApp {
+    avatar_urls: std::collections::HashMap<AccountId, String>,
+}
 
 #[near_bindgen]
 impl MyApp {
     pub fn set_account_avatar(&mut self, avatar_url: String) {
         let account_id = near_sdk::env::predecessor_account_id();
-        near_sdk::env::storage_write(account_id.as_bytes(), avatar_url.as_bytes());
+        self.avatar_urls.insert(account_id, avatar_url);
     }
 
-    pub fn get_account_avatar(&self, account_id: String) -> Option<String> {
-        near_sdk::env::storage_read(account_id.as_bytes()).map(|bytes| String::from_utf8(bytes).unwrap())
+    pub fn get_account_avatar(&self, account_id: AccountId) -> Option<String> {
+        self.avatar_urls.get(&account_id).cloned()
     }
 }
 
