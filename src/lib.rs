@@ -1,10 +1,19 @@
 use near_sdk::{near_bindgen, borsh, AccountId};
 
 #[near_bindgen]
-#[derive(Default, borsh::BorshDeserialize, borsh::BorshSerialize)]
+#[derive(borsh::BorshDeserialize, borsh::BorshSerialize)]
 #[borsh(crate = "near_sdk::borsh")]
 pub struct MyApp {
-    avatar_urls: std::collections::HashMap<AccountId, String>,
+    #[allow(deprecated)]
+    avatar_urls: near_sdk::store::UnorderedMap<AccountId, String>,
+}
+
+impl Default for MyApp {
+    fn default() -> Self {
+        Self {
+            avatar_urls: near_sdk::store::UnorderedMap::new(b"avatars:".to_vec()),
+        }
+    }
 }
 
 #[near_bindgen]
@@ -17,13 +26,11 @@ impl MyApp {
     pub fn get_account_avatar(&self, account_id: AccountId) -> Option<String> {
         self.avatar_urls.get(&account_id).cloned()
     }
-}
 
-// #[cfg(test)]
-// mod tests {
-//     fn test_set_account_avatar() {
-//         let mut contract = super::MyApp;
-//         contract.set_account_avatar("alice".to_string(), "https://example.com/avatar.png".to_string());
-//         assert_eq!(contract.get_account_avatar("alice".to_string()), Some("https://example.com/avatar.png".to_string()));
-//     }
-// }
+    pub fn migrate() {
+        near_sdk::assert_self();
+        near_sdk::env::state_write(&Self {
+            avatar_urls: near_sdk::store::UnorderedMap::new(b"avatars:".to_vec()),
+        });
+    }
+}
